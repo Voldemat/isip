@@ -29,7 +29,7 @@ jobs:
         python -m pip install --upgrade pip pipenv
         python -m pipenv install --dev --system
     - name: Lint
-      run: black --check . && flake8 . && mypy --pretty  .
+      run: python -m black --check . && python -m flake8 . && python -m mypy --pretty  .
   publish:
     runs-on: ubuntu-latest
     strategy:
