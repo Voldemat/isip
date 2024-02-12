@@ -5,7 +5,7 @@ from setuptools import find_packages, setup  # type: ignore [import-untyped]
 
 
 setup(
-    name="isip",
+    name="isip-client",
     version=os.environ["GITHUB_REF_NAME"],
     author="Vladimir Vojtenko",
     author_email="vladimirdev635@gmail.com",
