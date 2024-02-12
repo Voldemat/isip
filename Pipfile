@@ -11,6 +11,8 @@ mypy = "*"
 pytest = "*"
 pytest-asyncio = "*"
 pysipp = "*"
+black = "*"
+flake8 = "*"
 
 [requires]
 python_version = "3.11"
