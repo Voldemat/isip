@@ -48,22 +48,29 @@ class SIPRequest(SIPBaseMessage):
 class SIPRegisterRequest(SIPRequest):
     @classmethod
     def build_new(
-        cls, username: str, host: str, port: int, call_id: str | None = None
+        cls,
+        username: str,
+        local_host: str,
+        local_port: int,
+        host: str,
+        port: int,
+        call_id: str | None = None,
     ) -> SIPRegisterRequest:
         if call_id is None:
             call_id = gen_call_id()
-        contact = build_contact(username, host)
+        local_contact = build_contact(username, local_host, local_port)
+        remote_contact = build_contact(username, host, port)
         return SIPRegisterRequest(
             method="REGISTER",
             request_uri=build_request_uri(username, host, port),
             version="SIP/2.0",
             headers={
-                "Contact": contact,
-                "Via": build_via(host, port),
+                "Contact": local_contact,
+                "Via": build_via(local_host, local_port),
                 "CSeq": "1 REGISTER",
                 "Call-ID": call_id,
-                "From": build_from(username, contact),
-                "To": build_to(username, contact),
+                "From": build_from(username, remote_contact),
+                "To": build_to(username, remote_contact),
             },
             body=None,
         )

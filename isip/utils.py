@@ -10,8 +10,8 @@ def gen_branch() -> str:
     return "z9hG4bK." + uuid.uuid4().hex[:24]
 
 
-def build_contact(username: str, host: str) -> str:
-    return f"<sip:{username}@{host}>"
+def build_contact(username: str, host: str, port: int) -> str:
+    return f"<sip:{username}@{host}:{port}>"
 
 
 def get_host_and_username_from_contact(contact: str) -> tuple[str, str]:
@@ -24,7 +24,7 @@ def build_via(host: str, port: int) -> str:
 
 
 def build_from(username: str, contact: str) -> str:
-    return f'"{username}" {contact};tag={uuid.uuid4()}'
+    return f'"{username}" {contact}'
 
 
 def build_to(username: str, contact: str) -> str:

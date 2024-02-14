@@ -20,17 +20,19 @@ class SIPHolder:
         self.task = asyncio.create_task(self.task_main())
 
     async def task_main(self) -> None:
-        print("task_main")
         call_id = str(uuid.uuid4())
         while not self.should_stop:
             await self.register(call_id)
             await asyncio.sleep(30)
 
     async def register(self, call_id: str) -> None:
+        local_host, local_port = self.client.get_local_addr()
         request = SIPRegisterRequest.build_new(
             username=self.username,
             host=self.client.host,
             port=self.client.port,
+            local_host=local_host,
+            local_port=local_port,
             call_id=call_id,
         )
         response: SIPResponse | None = await self.send_and_receive(request)

@@ -100,3 +100,7 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
             print(exc)
         self.closed_event.set()
         self.new_msg_event.set()
+
+    def get_local_addr(self) -> tuple[str, int]:
+        assert self.transport is not None
+        return self.transport.get_extra_info("sockname")  # type: ignore
