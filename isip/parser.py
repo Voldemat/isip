@@ -8,6 +8,7 @@ from .utils import (
     build_digest_response,
     build_from,
     build_request_uri,
+    build_to,
     build_via,
     gen_branch,
     gen_call_id,
@@ -62,7 +63,7 @@ class SIPRegisterRequest(SIPRequest):
                 "CSeq": "1 REGISTER",
                 "Call-ID": call_id,
                 "From": build_from(username, contact),
-                "To": contact,
+                "To": build_to(username, contact),
             },
             body=None,
         )

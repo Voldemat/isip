@@ -27,6 +27,10 @@ def build_from(username: str, contact: str) -> str:
     return f'"{username}" {contact};tag={uuid.uuid4()}'
 
 
+def build_to(username: str, contact: str) -> str:
+    return f'"{username}" {contact}'
+
+
 def build_digest(
     method: str,
     host: str,
