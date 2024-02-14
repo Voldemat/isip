@@ -1,31 +1,38 @@
 import asyncio
-import uuid
-from isip.client import SIPClient
-from isip.parser import SIPRegisterRequest, SIPRequest, SIPResponse
+
+from .client import SIPClient
+from .parser import SIPRegisterRequest, SIPRequest, SIPResponse
+from .utils import gen_call_id
 
 
 class SIPHolder:
     task: asyncio.Task[None] | None
 
     def __init__(
-        self, client: SIPClient, username: str, password: str
+        self,
+        client: SIPClient,
+        username: str,
+        password: str,
+        registration_expires_s: int = 30,
     ) -> None:
         self.client = client
+        self.registration_count = 1
         self.should_stop = False
         self.task = None
         self.username = username
         self.password = password
+        self.call_id = gen_call_id()
+        self.registration_expires_s = registration_expires_s
 
     async def start(self) -> None:
         self.task = asyncio.create_task(self.task_main())
 
     async def task_main(self) -> None:
-        call_id = str(uuid.uuid4())
         while not self.should_stop:
-            await self.register(call_id)
-            await asyncio.sleep(30)
+            await self.register()
+            await asyncio.sleep(self.registration_expires_s)
 
-    async def register(self, call_id: str) -> None:
+    async def register(self) -> None:
         local_host, local_port = self.client.get_local_addr()
         request = SIPRegisterRequest.build_new(
             username=self.username,
@@ -33,7 +40,9 @@ class SIPHolder:
             port=self.client.port,
             local_host=local_host,
             local_port=local_port,
-            call_id=call_id,
+            call_id=self.call_id,
+            cseq=self.registration_count,
+            expires_s=self.registration_expires_s,
         )
         response: SIPResponse | None = await self.send_and_receive(request)
         if response is None:

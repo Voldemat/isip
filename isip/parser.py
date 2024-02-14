@@ -11,7 +11,6 @@ from .utils import (
     build_to,
     build_via,
     gen_branch,
-    gen_call_id,
     get_host_and_username_from_contact,
 )
 
@@ -54,24 +53,28 @@ class SIPRegisterRequest(SIPRequest):
         local_port: int,
         host: str,
         port: int,
-        call_id: str | None = None,
+        call_id: str,
+        expires_s: int,
+        cseq: int = 1,
     ) -> SIPRegisterRequest:
-        if call_id is None:
-            call_id = gen_call_id()
         local_contact = build_contact(username, local_host, local_port)
         remote_contact = build_contact(username, host, port)
+        headers = {
+            "Contact": local_contact,
+            "Via": build_via(local_host, local_port),
+            "CSeq": f"{cseq} REGISTER",
+            "Call-ID": call_id,
+            "From": build_from(username, remote_contact),
+            "To": build_to(username, remote_contact),
+            "Max-Forwards": "70",
+        }
+        if expires_s is not None:
+            headers["Expires"] = str(expires_s)
         return SIPRegisterRequest(
             method="REGISTER",
             request_uri=build_request_uri(username, host, port),
             version="SIP/2.0",
-            headers={
-                "Contact": local_contact,
-                "Via": build_via(local_host, local_port),
-                "CSeq": "1 REGISTER",
-                "Call-ID": call_id,
-                "From": build_from(username, remote_contact),
-                "To": build_to(username, remote_contact),
-            },
+            headers=headers,
             body=None,
         )
 

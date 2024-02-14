@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 import socket
+from collections import deque
 from typing import Any, AsyncGenerator
 
 from .parser import SIPMessage, SIPParser, SIPRequest
@@ -30,7 +30,7 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
         port: int,
         parser: SIPParser,
         local_host: str = "0.0.0.0",
-        local_port: int = 0,
+        local_port: int = 5060,
     ) -> None:
         self.port = port
         self.host = host
@@ -112,5 +112,4 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
         self.new_msg_event.set()
 
     def get_local_addr(self) -> tuple[str, int]:
-        assert self.transport is not None
-        return self.transport.get_extra_info("sockname")  # type: ignore
+        return self.local_host, self.local_port
