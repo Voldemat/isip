@@ -24,9 +24,18 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
     closed_event: asyncio.Event
     queue: deque[SIPMessage]
 
-    def __init__(self, host: str, port: int, parser: SIPParser) -> None:
+    def __init__(
+        self,
+        host: str,
+        port: int,
+        parser: SIPParser,
+        local_host: str = "0.0.0.0",
+        local_port: int = 0,
+    ) -> None:
         self.port = port
         self.host = host
+        self.local_host = local_host
+        self.local_port = local_port
         self.parser = parser
         self.queue = deque()
         self.transport = None
@@ -42,6 +51,7 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
             return
         self.transport, _ = await loop.create_datagram_endpoint(
             lambda: SIPProtocol(self),
+            local_addr=(self.local_host, self.local_port),
             remote_addr=(self.host, self.port),
             family=socket.AF_INET,
         )
