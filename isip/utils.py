@@ -20,7 +20,7 @@ def get_host_and_username_from_contact(contact: str) -> tuple[str, str]:
 
 
 def build_via(host: str, port: int) -> str:
-    return f"Via: SIP/2.0/UDP {host}:{port};" f"branch={gen_branch()};alias"
+    return f"SIP/2.0/UDP {host}:{port};" f"branch={gen_branch()};alias"
 
 
 def build_from(username: str, contact: str) -> str:
