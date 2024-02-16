@@ -32,7 +32,10 @@ class SIPHolder:
 
     async def task_main(self) -> None:
         while not self.should_stop:
-            await self.register()
+            try:
+                await self.register()
+            except BaseException:
+                self.logger.exception("Register exception: ")
             self.logger.debug(f"Sleeping for {self.registration_expires_s}s")
             await asyncio.sleep(self.registration_expires_s)
 
@@ -53,28 +56,22 @@ class SIPHolder:
         self.logger.debug(
             f"Builded new register request: \n {request.serialize().decode()}"
         )
-        response: SIPResponse | None = await self.send_and_receive(request)
-        if response is None:
-            raise RuntimeError(
-                f"Cannot register number {self.username} "
-                f"on host {self.client.host}:{self.client.port}"
-            )
-        assert response.status == 401, "Response status not 401"
+        response = await self.send_and_receive(request)
+        if isinstance(response, Exception):
+            raise response
         request_with_auth = SIPRegisterRequest.build_from_response(
             request=request, response=response, password=self.password
         )
         response = await self.send_and_receive(request_with_auth)
-        if response is None or response.status != 200:
-            raise RuntimeError(
-                f"Cannot register number {self.username} "
-                f"on host {self.client.host}:{self.client.port}"
-            )
+        if isinstance(response, Exception):
+            raise response
         self.registration_count += 1
 
     async def send_and_receive(
         self, request: SIPRequest
-    ) -> SIPResponse | None:
+    ) -> SIPResponse | Exception:
         self.client.clear_queue()
+        last_error: Exception | None = None
         for _ in range(0, 3):
             await self.client.send_message(request)
             try:
@@ -82,17 +79,33 @@ class SIPHolder:
                     self.client.wait_for_message(), timeout=10
                 )
                 self.logger.debug(f"Received message: {message}")
-                assert message is not None, "Message is None"
-                assert isinstance(
-                    message, SIPResponse
-                ), "Message is not response"
-                return message
+                if message is None:
+                    last_error = RuntimeError(
+                        "Returned None when expected response"
+                    )
+                elif isinstance(message, SIPRequest):
+                    last_error = RuntimeError(
+                        f"Received request: {message} when expected response"
+                    )
+                else:
+                    return message
             except asyncio.TimeoutError:
+                last_error = RuntimeError("Waiting for message timed out")
                 continue
-
-        return None
+        assert last_error is not None
+        return last_error
 
     async def stop(self) -> None:
+        if self.task is None:
+            return
         self.should_stop = True
-        if self.task is not None:
-            self.task.cancel()
+        try:
+            await asyncio.wait_for(self.task, timeout=3)
+            return
+        except asyncio.TimeoutError:
+            pass
+        self.task.cancel()
+        try:
+            await self.task
+        except asyncio.CancelledError:
+            pass
