@@ -1,4 +1,5 @@
 from __future__ import annotations
+import logging
 
 import re
 from dataclasses import dataclass
@@ -104,7 +105,7 @@ class SIPRegisterRequest(SIPRequest):
                 "Contact": request.headers["Contact"],
                 "Via": response.headers["Via"].split(";")[0]
                 + f";branch={gen_branch()};alias",
-                "CSeq": "1 REGISTER",
+                "CSeq": request.headers["CSeq"],
                 "Call-ID": request.headers["Call-ID"],
                 "From": request.headers["From"],
                 "To": request.headers["To"],
@@ -124,9 +125,17 @@ SIPMessage = SIPRequest | SIPResponse
 
 
 class SIPParser:
+    def __init__(
+        self, logger: logging.Logger = logging.getLogger(__name__)
+    ) -> None:
+        self.logger = logger
+
     def parse_request(self, message: str) -> SIPRequest | Exception:
+        self.logger.debug(f"(parse_request) message: {message}")
         lines = message.split("\n")
+        self.logger.debug(f"(parse_request) lines: {lines}")
         start_line = lines.pop(0)
+        self.logger.debug(f"(parse_request) start_line: {start_line}")
         method, request_uri, version = start_line.split(" ")
         result = self.parse_headers_and_body(lines)
         if isinstance(result, ValueError):
@@ -149,6 +158,9 @@ class SIPParser:
             if line == "":
                 line_break_index = index
                 break
+            self.logger.debug(
+                f"(parse_headers_and_body) line before split: {line}"
+            )
             key, value = line.split(":", 1)
             headers[key.strip()] = value.strip()
         body: str | None = None
