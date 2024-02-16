@@ -30,12 +30,20 @@ class SIPHolder:
     async def start(self) -> None:
         self.task = asyncio.create_task(self.task_main())
 
+    async def get_task_error(self) -> Exception | None:
+        if self.task is None:
+            return None
+        if not self.task.done():
+            return None
+        try:
+            self.task.result()
+            return None
+        except Exception as exc:
+            return exc
+
     async def task_main(self) -> None:
         while not self.should_stop:
-            try:
-                await self.register()
-            except BaseException:
-                self.logger.exception("Register exception: ")
+            await self.register()
             self.logger.debug(f"Sleeping for {self.registration_expires_s}s")
             await asyncio.sleep(self.registration_expires_s)
 
