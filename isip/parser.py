@@ -132,7 +132,7 @@ class SIPParser:
 
     def parse_request(self, message: str) -> SIPRequest | Exception:
         self.logger.debug(f"(parse_request) message: {message}")
-        lines = message.split("\n")
+        lines = message.split("\r\n")
         self.logger.debug(f"(parse_request) lines: {lines}")
         start_line = lines.pop(0)
         self.logger.debug(f"(parse_request) start_line: {start_line}")
