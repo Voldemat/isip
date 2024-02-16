@@ -69,6 +69,7 @@ class SIPHolder:
                 f"Cannot register number {self.username} "
                 f"on host {self.client.host}:{self.client.port}"
             )
+        self.registration_count += 1
 
     async def send_and_receive(
         self, request: SIPRequest
