@@ -68,6 +68,7 @@ class SIPRegisterRequest(SIPRequest):
             "From": build_from(username, remote_contact),
             "To": build_to(username, remote_contact),
             "Max-Forwards": "70",
+            "Expires": str(expires_s),
         }
         if expires_s is not None:
             headers["Expires"] = str(expires_s)
@@ -102,13 +103,9 @@ class SIPRegisterRequest(SIPRequest):
             request_uri=request.request_uri,
             version="SIP/2.0",
             headers={
-                "Contact": request.headers["Contact"],
+                **request.headers,
                 "Via": response.headers["Via"].split(";")[0]
                 + f";branch={gen_branch()};alias",
-                "CSeq": request.headers["CSeq"],
-                "Call-ID": request.headers["Call-ID"],
-                "From": request.headers["From"],
-                "To": request.headers["To"],
                 "Authorization": auth_response,
             },
             body=None,
