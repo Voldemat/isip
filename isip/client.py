@@ -31,15 +31,11 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
         host: str,
         port: int,
         parser: SIPParser,
-        local_host: str = "0.0.0.0",
-        local_port: int = 5060,
         logger: logging.Logger = logging.getLogger(__name__),
     ) -> None:
         self.logger = logger
         self.port = port
         self.host = host
-        self.local_host = local_host
-        self.local_port = local_port
         self.parser = parser
         self.queue = deque()
         self.transport = None
@@ -64,7 +60,6 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
         )
         self.transport, _ = await loop.create_datagram_endpoint(
             lambda: SIPProtocol(self),
-            local_addr=(self.local_host, self.local_port),
             remote_addr=(self.host, self.port),
             family=socket.AF_INET,
         )
@@ -134,4 +129,6 @@ class SIPClient(AsyncGenerator[SIPMessage, None]):
         self.new_msg_event.set()
 
     def get_local_addr(self) -> tuple[str, int]:
-        return self.local_host, self.local_port
+        assert self.transport is not None
+        host, port = self.transport.get_extra_info("sockname")
+        return host, port
