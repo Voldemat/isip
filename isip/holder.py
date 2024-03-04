@@ -112,6 +112,9 @@ class SIPHolder:
             return
         except asyncio.TimeoutError:
             pass
+        except BaseException:
+            self.logger.exception("Exception from stopped task: ")
+            return
         self.task.cancel()
         try:
             await self.task
